@@ -1,11 +1,11 @@
 class Solution {
     public int networkDelayTime(int[][] times, int n, int k) {
-        List<int[]>[] graph = new ArrayList[n + 1];
-        for (int i = 0; i <= n; i++) {
-            graph[i] = new ArrayList<>();
+        int[][] graph = new int[n + 1][n + 1];
+        for (int[] row : graph) {
+            Arrays.fill(row, Integer.MAX_VALUE);
         }
         for (int[] time : times) {
-            graph[time[0]].add(new int[]{time[1], time[2]});
+            graph[time[0]][time[1]] = time[2];
         }
 
         int[] dist = new int[n + 1];
@@ -13,25 +13,26 @@ class Solution {
         dist[k] = 0;
 
         PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
-        pq.offer(new int[]{k, 0});
+        pq.offer(new int[] { k, 0 });
+
+        boolean[] processed = new boolean[n + 1];
 
         while (!pq.isEmpty()) {
             int[] curr = pq.poll();
             int node = curr[0];
             int time = curr[1];
 
-            if (time > dist[node]) {
+            if (processed[node])
                 continue;
-            }
+            processed[node] = true;
 
-            for (int[] edge : graph[node]) {
-                int neighbor = edge[0];
-                int weight = edge[1];
-                int newTime = time + weight;
-
-                if (newTime < dist[neighbor]) {
-                    dist[neighbor] = newTime;
-                    pq.offer(new int[]{neighbor, newTime});
+            for (int neighbor = 1; neighbor <= n; neighbor++) {
+                if (graph[node][neighbor] != Integer.MAX_VALUE) {
+                    int newTime = time + graph[node][neighbor];
+                    if (newTime < dist[neighbor]) {
+                        dist[neighbor] = newTime;
+                        pq.offer(new int[] { neighbor, newTime });
+                    }
                 }
             }
         }
@@ -39,11 +40,12 @@ class Solution {
         int maxTime = 0;
         for (int i = 1; i <= n; i++) {
             if (dist[i] == Integer.MAX_VALUE) {
-                return -1;
+                return -1; // Algum nó não foi alcançável
             }
             maxTime = Math.max(maxTime, dist[i]);
         }
 
         return maxTime;
+
     }
 }
