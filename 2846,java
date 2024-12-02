@@ -1,0 +1,100 @@
+class Solution {
+    private List<List<int[]>> adj;
+    private int[][] up;
+    private int[][] freq;
+    private int[] depth;
+    private int maxLog;
+    
+    public int[] minOperationsQueries(int n, int[][] edges, int[][] queries) {
+
+        adj = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            adj.add(new ArrayList<>());
+        }
+        
+        for (int[] edge : edges) {
+            adj.get(edge[0]).add(new int[]{edge[1], edge[2]});
+            adj.get(edge[1]).add(new int[]{edge[0], edge[2]});
+        }
+        
+        maxLog = (int) (Math.log(n) / Math.log(2)) + 1;
+        
+        up = new int[n][maxLog];
+        freq = new int[n][27]; // Assume 26 como peso máximo
+        depth = new int[n];
+        
+        dfs(0, -1, 0, new int[27]);
+        
+        for (int j = 1; j < maxLog; j++) {
+            for (int i = 0; i < n; i++) {
+                if (up[i][j-1] != -1) {
+                    up[i][j] = up[up[i][j-1]][j-1];
+                } else {
+                    up[i][j] = -1;
+                }
+            }
+        }
+        
+        int[] answer = new int[queries.length];
+        for (int i = 0; i < queries.length; i++) {
+            int u = queries[i][0], v = queries[i][1];
+            int lca = getLCA(u, v);
+            
+            int pathLength = depth[u] + depth[v] - 2 * depth[lca];
+            
+            int maxFreq = 0;
+            for (int w = 1; w <= 26; w++) {
+                int freqW = freq[u][w] + freq[v][w] - 2 * freq[lca][w];
+                maxFreq = Math.max(maxFreq, freqW);
+            }
+            
+            answer[i] = pathLength - maxFreq;
+        }
+        
+        return answer;
+    }
+    
+    private void dfs(int node, int parent, int d, int[] freqSoFar) {
+        depth[node] = d;
+        up[node][0] = parent;
+        
+        for (int i = 1; i <= 26; i++) {
+            freq[node][i] = freqSoFar[i];
+        }
+        
+        for (int[] edge : adj.get(node)) {
+            if (edge[0] != parent) {
+                freqSoFar[edge[1]]++;
+                dfs(edge[0], node, d + 1, freqSoFar);
+                freqSoFar[edge[1]]--;
+            }
+        }
+    }
+    
+    private int getLCA(int u, int v) {
+        if (depth[u] < depth[v]) {
+            int temp = u;
+            u = v;
+            v = temp;
+        }
+        
+        int diff = depth[u] - depth[v];
+        
+        for (int i = 0; i < maxLog; i++) {
+            if (((diff >> i) & 1) == 1) {
+                u = up[u][i];
+            }
+        }
+        
+        if (u == v) return u;
+        
+        for (int i = maxLog - 1; i >= 0; i--) {
+            if (up[u][i] != up[v][i]) {
+                u = up[u][i];
+                v = up[v][i];
+            }
+        }
+        
+        return up[u][0];
+    }
+}
