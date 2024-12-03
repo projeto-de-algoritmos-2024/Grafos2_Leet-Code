@@ -34,3 +34,4 @@ Java
 Rodar algoritmos desse repositório no LeetCode
 
 ## Vídeo de apresentação do trabalho
+[link do video](https://www.youtube.com/watch?v=V12lxGJ3txM)
